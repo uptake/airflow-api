@@ -1,0 +1,35 @@
+version: '2.1'
+services:
+    postgres:
+        image: postgres:10.6
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+    airflow-webserver:
+        build: .
+        restart: always
+        depends_on:
+            - postgres
+        environment:
+            - LOAD_EX=n
+            - EXECUTOR=Local
+            - FERNET_KEY=NaFz-ag5Wm7SyBZnLLk8wIzVySNqI6avNVjRw7qwXLA=
+        user: test_user
+        ports:
+            - "8080:8080"
+        command: webserver
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
+networks:
+  default:
+    external:
+      name: ${BUILD_ENVIRONMENT_NETWORK}
